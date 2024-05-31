@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create dummy artifacts
+        run: |
+          mkdir dist
+          echo AAA > dist/a.txt
+          echo BBB > dist/b.txt
+          tar -czvf rel.tar.gz dist
+
+      - name: Create release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: VERSION
+          tag_name: TAG
+
+      - name: Upload release artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./rel.tar.gz
+          asset_name: rel.tar.gz
+          asset_content_type: application/gzip
